@@ -1,0 +1,5 @@
+--- Production Model Summary ---
+Best Model: XGBoost
+RMSE: 3026.21
+R2: 0.9673
+Features: ['Store', 'Dept', 'IsHoliday', 'Type', 'Size', 'Temperature', 'Fuel_Price', 'MarkDown1', 'MarkDown2', 'CPI', 'Unemployment', 'Year', 'Month', 'Day', 'DayOfWeek', 'Is_Weekend', 'Quarter', 'WeekOfYear']
