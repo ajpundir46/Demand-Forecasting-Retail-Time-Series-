@@ -2,10 +2,16 @@ import streamlit as st
 import pandas as pd
 import joblib
 import os
+import sys
 import json
 import xgboost as xgb
 import sklearn
 from datetime import datetime
+
+# Absolute path resolution for Streamlit Cloud
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if BASE_DIR not in sys.path:
+    sys.path.append(BASE_DIR)
 
 # Page configuration
 st.set_page_config(
@@ -18,12 +24,15 @@ st.set_page_config(
 # --- Load Resources ---
 @st.cache_resource
 def load_metadata():
-    metrics_path = 'reports/model_metrics.json'
-    return json.load(open(metrics_path, 'r')) if os.path.exists(metrics_path) else None
+    metrics_path = os.path.join(BASE_DIR, 'reports', 'model_metrics.json')
+    if os.path.exists(metrics_path):
+        with open(metrics_path, 'r') as f:
+            return json.load(f)
+    return None
 
 @st.cache_resource
 def load_specific_model(model_name):
-    path = f'models/{model_name}.pkl'
+    path = os.path.join(BASE_DIR, 'models', f'{model_name}.pkl')
     return joblib.load(path) if os.path.exists(path) else None
 
 metadata = load_metadata()
@@ -48,7 +57,7 @@ if metadata:
     st.sidebar.write(f"**Precision**: {model_m['R2']:.2%}")
 else:
     st.sidebar.error("⚠️ Metadata missing. Using default model.")
-    model = joblib.load('models/best_model.pkl') if os.path.exists('models/best_model.pkl') else None
+    model = joblib.load(os.path.join(BASE_DIR, 'models', 'best_model.pkl')) if os.path.exists(os.path.join(BASE_DIR, 'models', 'best_model.pkl')) else None
 
 st.sidebar.markdown("---")
 st.sidebar.write(f"**Training Period**: Feb 2010 - Oct 2012")
@@ -150,7 +159,7 @@ if metadata:
         with tabs[1]:
             models = [m['Model'] for m in metadata['metrics']]
             sel = st.selectbox("Inspect Algorithm:", models, index=models.index(metadata['best_model']))
-            path = f"reports/figures/actual_vs_pred_{sel}.png"
+            path = os.path.join(BASE_DIR, 'reports', 'figures', f'actual_vs_pred_{sel}.png')
             if os.path.exists(path):
                 _, img_c, _ = st.columns([1, 2, 1])
                 with img_c:
@@ -162,8 +171,8 @@ with st.expander("🏗️ Historical Data Insights (2010-2012)"):
     st.write("Explore the foundational patterns the model was trained on.")
     
     # Load aggregated summaries
-    trend_path = 'reports/sales_trend_benchmark.csv'
-    type_path = 'reports/sales_by_type_benchmark.csv'
+    trend_path = os.path.join(BASE_DIR, 'reports', 'sales_trend_benchmark.csv')
+    type_path = os.path.join(BASE_DIR, 'reports', 'sales_by_type_benchmark.csv')
     
     if os.path.exists(trend_path) and os.path.exists(type_path):
         dash_col1, dash_col2 = st.columns(2)
