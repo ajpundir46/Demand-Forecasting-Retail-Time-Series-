@@ -5,6 +5,7 @@ import os
 import sys
 import json
 import xgboost as xgb
+from xgboost import XGBRegressor
 import sklearn
 from datetime import datetime
 
@@ -33,7 +34,13 @@ def load_metadata():
 @st.cache_resource
 def load_specific_model(model_name):
     path = os.path.join(BASE_DIR, 'models', f'{model_name}.pkl')
-    return joblib.load(path) if os.path.exists(path) else None
+    try:
+        if os.path.exists(path):
+            return joblib.load(path)
+    except Exception as e:
+        st.error(f"🚫 Critical Load Failure for {model_name}: {e}")
+        st.info("💡 Pro Tip: Is Scikit-learn and XGBoost pinned in your requirements.txt?")
+    return None
 
 metadata = load_metadata()
 
