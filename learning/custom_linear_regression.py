@@ -7,43 +7,38 @@ class CustomLinearRegression:
     Linear Regression implemented from scratch using Gradient Descent.
     Formula: y = w1*x1 + w2*x2 + ... + wn*xn + b
     """
-    def __init__(self, learning_rate=0.01, iterations=1000):
+    def __init__(self, learning_rate=0.01, iterations=1000, l2_reg=0.01):
         self.lr = learning_rate
         self.iterations = iterations
+        self.l2_reg = l2_reg # lambda for L2 (Ridge) Regularization
         self.weights = None
         self.bias = None
         self.cost_history = []
 
     def fit(self, X, y):
-        """
-        Trains the model using Gradient Descent.
-        X: numpy array of features (n_samples, n_features)
-        y: numpy array of target values (n_samples,)
-        """
         n_samples, n_features = X.shape
-        
-        # 1. Initialize weights and bias to zeros
         self.weights = np.zeros(n_features)
         self.bias = 0
 
-        # 2. Gradient Descent Loop
         for i in range(self.iterations):
-            # i. Predict current values (y_hat)
             y_predicted = np.dot(X, self.weights) + self.bias
             
-            # ii. Calculate Cost (Mean Squared Error)
-            cost = (1 / (2 * n_samples)) * np.sum((y_predicted - y)**2)
+            # L2 Loss = Mean Squared Error + (lambda * sum of weights squared)
+            cost = (1 / (2 * n_samples)) * (np.sum((y_predicted - y)**2) + self.l2_reg * np.sum(self.weights**2))
             self.cost_history.append(cost)
 
-            # iii. Compute Gradients
-            # dw = (1/n) * X.T * (y_predicted - y)
-            # db = (1/n) * sum(y_predicted - y)
-            dw = (1 / n_samples) * np.dot(X.T, (y_predicted - y))
+            # L2 Gradient: dw = (1/n) * X.T * error + (lambda/n) * weights
+            dw = (1 / n_samples) * (np.dot(X.T, (y_predicted - y)) + self.l2_reg * self.weights)
             db = (1 / n_samples) * np.sum(y_predicted - y)
 
-            # iv. Update Weights and Bias (Move in opposite direction of gradient)
+            # iv. Update Weights and Bias
             self.weights -= self.lr * dw
             self.bias -= self.lr * db
+
+            # v. Early Stopping (Convergence Detection)
+            if i > 0 and abs(self.cost_history[-2] - cost) < 1e-7:
+                print(f"Converged at iteration {i}: Cost improvement is negligible.")
+                break
 
             if i % 100 == 0:
                 print(f"Iteration {i}: Cost {cost:.4f}")
